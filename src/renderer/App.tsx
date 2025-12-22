@@ -4,6 +4,7 @@ import { WorkspaceSidebar } from './components/layout/WorkspaceSidebar';
 import { WorktreePanel } from './components/layout/WorktreePanel';
 import { MainContent } from './components/layout/MainContent';
 import { useWorkspaceStore } from './stores/workspace';
+import { useSettingsStore } from './stores/settings';
 import { useWorktreeList, useWorktreeCreate, useWorktreeRemove } from './hooks/useWorktree';
 import { useGitBranches } from './hooks/useGit';
 import type { GitWorktree, WorkspaceRecord, WorktreeCreateOptions } from '@shared/types';
@@ -44,6 +45,9 @@ export default function App() {
   const startWidthRef = useRef(0);
 
   const { workspaces, currentWorkspace, setCurrentWorkspace, setWorkspaces } = useWorkspaceStore();
+
+  // Initialize settings store (for theme hydration)
+  useSettingsStore();
 
   // Load panel sizes from localStorage
   useEffect(() => {
@@ -288,14 +292,10 @@ export default function App() {
             className="h-full shrink-0 overflow-hidden"
           >
             <WorkspaceSidebar
-              workspaces={workspaces}
-              currentWorkspace={currentWorkspace}
               repositories={repositories}
               selectedRepo={selectedRepo}
-              onSelectWorkspace={handleSelectWorkspace}
               onSelectRepo={handleSelectRepo}
               onAddRepository={handleAddRepository}
-              width={workspaceWidth}
               collapsed={false}
               onCollapse={() => setWorkspaceCollapsed(true)}
             />

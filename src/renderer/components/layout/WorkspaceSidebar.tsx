@@ -2,38 +2,23 @@ import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectPopup,
-  SelectItem,
-} from '@/components/ui/select';
 import { Search, Plus, FolderOpen, Settings, Sparkles, PanelLeftClose } from 'lucide-react';
-import type { WorkspaceRecord } from '@shared/types';
+import { SettingsDialog } from '@/components/settings/SettingsDialog';
 
 interface WorkspaceSidebarProps {
-  workspaces: WorkspaceRecord[];
-  currentWorkspace: WorkspaceRecord | null;
   repositories: Array<{ name: string; path: string }>;
   selectedRepo: string | null;
-  onSelectWorkspace: (workspace: WorkspaceRecord) => void;
   onSelectRepo: (repoPath: string) => void;
   onAddRepository: () => void;
-  width?: number;
   collapsed?: boolean;
   onCollapse?: () => void;
 }
 
 export function WorkspaceSidebar({
-  workspaces,
-  currentWorkspace,
   repositories,
   selectedRepo,
-  onSelectWorkspace,
   onSelectRepo,
   onAddRepository,
-  width = 280,
   collapsed = false,
   onCollapse,
 }: WorkspaceSidebarProps) {
@@ -42,12 +27,6 @@ export function WorkspaceSidebar({
   const filteredRepos = repositories.filter((repo) =>
     repo.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
-  const handleWorkspaceChange = (value: string | null) => {
-    if (!value) return;
-    const workspace = workspaces.find((w) => String(w.id) === value);
-    if (workspace) onSelectWorkspace(workspace);
-  };
 
   return (
     <aside
@@ -66,38 +45,6 @@ export function WorkspaceSidebar({
             <PanelLeftClose className="h-4 w-4" />
           </Button>
         )}
-      </div>
-
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2">
-        <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-          Workspaces
-        </span>
-      </div>
-
-      {/* Workspace Selector */}
-      <div className="px-3 pb-3">
-        <Select value={currentWorkspace ? String(currentWorkspace.id) : ''} onValueChange={handleWorkspaceChange}>
-          <SelectTrigger className="w-full">
-            <div className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-blue-500" />
-              <SelectValue>{currentWorkspace?.name || 'Personal'}</SelectValue>
-              <span className="ml-auto rounded bg-muted px-1.5 py-0.5 text-xs">
-                {repositories.length}
-              </span>
-            </div>
-          </SelectTrigger>
-          <SelectPopup>
-            {workspaces.map((ws) => (
-              <SelectItem key={ws.id} value={String(ws.id)}>
-                <div className="flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full bg-blue-500" />
-                  {ws.name}
-                </div>
-              </SelectItem>
-            ))}
-          </SelectPopup>
-        </Select>
       </div>
 
       {/* Search */}
@@ -170,9 +117,13 @@ export function WorkspaceSidebar({
             <Plus className="h-4 w-4" />
             Add Repository
           </Button>
-          <Button variant="ghost" size="icon" className="h-8 w-8">
-            <Settings className="h-4 w-4" />
-          </Button>
+          <SettingsDialog
+            trigger={
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                <Settings className="h-4 w-4" />
+              </Button>
+            }
+          />
         </div>
       </div>
     </aside>

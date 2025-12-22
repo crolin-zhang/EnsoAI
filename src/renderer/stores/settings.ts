@@ -1,29 +1,57 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+
+export type Theme = 'light' | 'dark' | 'system';
 
 interface SettingsState {
-  theme: 'light' | 'dark' | 'system';
+  theme: Theme;
   fontSize: number;
   fontFamily: string;
   terminalFontSize: number;
   terminalFontFamily: string;
 
-  setTheme: (theme: 'light' | 'dark' | 'system') => void;
+  setTheme: (theme: Theme) => void;
   setFontSize: (size: number) => void;
   setFontFamily: (family: string) => void;
   setTerminalFontSize: (size: number) => void;
   setTerminalFontFamily: (family: string) => void;
 }
 
-export const useSettingsStore = create<SettingsState>((set) => ({
-  theme: 'dark',
-  fontSize: 14,
-  fontFamily: 'Inter',
-  terminalFontSize: 14,
-  terminalFontFamily: 'JetBrains Mono',
+// Apply theme to document
+function applyTheme(theme: Theme) {
+  const root = document.documentElement;
+  const isDark =
+    theme === 'dark' ||
+    (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
 
-  setTheme: (theme) => set({ theme }),
-  setFontSize: (fontSize) => set({ fontSize }),
-  setFontFamily: (fontFamily) => set({ fontFamily }),
-  setTerminalFontSize: (terminalFontSize) => set({ terminalFontSize }),
-  setTerminalFontFamily: (terminalFontFamily) => set({ terminalFontFamily }),
-}));
+  root.classList.toggle('dark', isDark);
+}
+
+export const useSettingsStore = create<SettingsState>()(
+  persist(
+    (set) => ({
+      theme: 'dark',
+      fontSize: 14,
+      fontFamily: 'Inter',
+      terminalFontSize: 14,
+      terminalFontFamily: 'JetBrains Mono',
+
+      setTheme: (theme) => {
+        applyTheme(theme);
+        set({ theme });
+      },
+      setFontSize: (fontSize) => set({ fontSize }),
+      setFontFamily: (fontFamily) => set({ fontFamily }),
+      setTerminalFontSize: (terminalFontSize) => set({ terminalFontSize }),
+      setTerminalFontFamily: (terminalFontFamily) => set({ terminalFontFamily }),
+    }),
+    {
+      name: 'enso-settings',
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          applyTheme(state.theme);
+        }
+      },
+    }
+  )
+);
