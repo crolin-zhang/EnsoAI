@@ -132,8 +132,11 @@ export function MainContent({
             </div>
           )}
         </div>
+        {/* Terminal tab - keep mounted to preserve shell sessions */}
+        <div className={cn('absolute inset-0', activeTab !== 'terminal' && 'invisible')}>
+          <TerminalPanel cwd={worktreePath} />
+        </div>
         {activeTab === 'file' && <FilePlaceholder />}
-        {activeTab === 'terminal' && <TerminalPlaceholder />}
         {activeTab === 'source-control' && <SourceControlPlaceholder />}
       </div>
     </main>
@@ -144,14 +147,6 @@ function FilePlaceholder() {
   return (
     <div className="flex h-full items-center justify-center text-muted-foreground">
       <p>File Explorer - Phase 4</p>
-    </div>
-  );
-}
-
-function TerminalPlaceholder() {
-  return (
-    <div className="flex h-full items-center justify-center text-muted-foreground">
-      <p>Terminal - Phase 5</p>
     </div>
   );
 }
