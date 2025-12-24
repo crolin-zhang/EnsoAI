@@ -44,7 +44,7 @@
     "framer-motion": "^12.23.26",
     "lucide-react": "^0.513.0",
     "monaco-editor": "^0.55.1",
-    "node-pty": "^1.1.0",
+    "node-pty-prebuilt-multiarch": "^0.12.1",
     "react": "^19.1.4",
     "react-dom": "^19.1.4",
     "simple-git": "^3.30.0",
