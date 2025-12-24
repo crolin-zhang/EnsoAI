@@ -56,6 +56,8 @@ export interface UseXtermResult {
   ) => boolean;
   /** Clear search decorations */
   clearSearch: () => void;
+  /** Clear terminal display */
+  clear: () => void;
 }
 
 function useTerminalSettings() {
@@ -145,6 +147,10 @@ export function useXterm({
 
   const clearSearch = useCallback(() => {
     searchAddonRef.current?.clearDecorations();
+  }, []);
+
+  const clear = useCallback(() => {
+    terminalRef.current?.clear();
   }, []);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: settings excluded - updated via separate effect
@@ -433,13 +439,18 @@ export function useXterm({
   }, [isActive, fit]);
 
   // Handle window visibility change to refresh terminal rendering
+  // Note: Refreshes ALL terminal instances (including hidden ones) to fix rendering artifacts
+  // when using 'invisible' CSS class for session management
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (!document.hidden && terminalRef.current && isActive) {
+      if (!document.hidden && terminalRef.current) {
         // Window became visible again, refresh terminal
         requestAnimationFrame(() => {
           terminalRef.current?.refresh(0, terminalRef.current.rows - 1);
-          fit();
+          // Only fit if this terminal is currently active to avoid resize conflicts
+          if (isActive) {
+            fit();
+          }
         });
       }
     };
@@ -449,12 +460,17 @@ export function useXterm({
   }, [isActive, fit]);
 
   // Handle app focus/blur events (macOS app switching)
+  // Note: Refreshes ALL terminal instances (including hidden ones) to fix rendering artifacts
+  // when using 'invisible' CSS class for session management
   useEffect(() => {
     const handleFocus = () => {
-      if (terminalRef.current && isActive) {
+      if (terminalRef.current) {
         requestAnimationFrame(() => {
           terminalRef.current?.refresh(0, terminalRef.current.rows - 1);
-          fit();
+          // Only fit if this terminal is currently active to avoid resize conflicts
+          if (isActive) {
+            fit();
+          }
         });
       }
     };
@@ -473,5 +489,6 @@ export function useXterm({
     findNext,
     findPrevious,
     clearSearch,
+    clear,
   };
 }

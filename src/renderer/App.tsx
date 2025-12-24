@@ -127,6 +127,47 @@ export default function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  // Listen for main tab switching keyboard shortcuts
+  useEffect(() => {
+    const matchesKeybinding = (
+      e: KeyboardEvent,
+      binding: { key: string; ctrl?: boolean; alt?: boolean; shift?: boolean; meta?: boolean }
+    ) => {
+      const keyMatch = e.key.toLowerCase() === binding.key.toLowerCase();
+      const ctrlMatch = binding.ctrl !== undefined ? e.ctrlKey === binding.ctrl : true;
+      const altMatch = binding.alt !== undefined ? e.altKey === binding.alt : true;
+      const shiftMatch = binding.shift !== undefined ? e.shiftKey === binding.shift : true;
+      const metaMatch = binding.meta !== undefined ? e.metaKey === binding.meta : true;
+
+      return keyMatch && ctrlMatch && altMatch && shiftMatch && metaMatch;
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const bindings = useSettingsStore.getState().mainTabKeybindings;
+
+      if (matchesKeybinding(e, bindings.switchToAgent)) {
+        e.preventDefault();
+        setActiveTab('chat');
+        return;
+      }
+
+      if (matchesKeybinding(e, bindings.switchToFile)) {
+        e.preventDefault();
+        setActiveTab('file');
+        return;
+      }
+
+      if (matchesKeybinding(e, bindings.switchToTerminal)) {
+        e.preventDefault();
+        setActiveTab('terminal');
+        return;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   // Save panel sizes to localStorage
   useEffect(() => {
     localStorage.setItem('enso-workspace-width', String(workspaceWidth));
