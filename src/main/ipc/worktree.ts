@@ -5,6 +5,9 @@ import {
 } from '@shared/types';
 import { ipcMain } from 'electron';
 import { WorktreeService } from '../services/git/WorktreeService';
+import { agentSessionManager } from './agent';
+import { stopWatchersInDirectory } from './files';
+import { ptyManager } from './terminal';
 
 const worktreeServices = new Map<string, WorktreeService>();
 
@@ -40,6 +43,14 @@ export function registerWorktreeHandlers(): void {
   ipcMain.handle(
     IPC_CHANNELS.WORKTREE_REMOVE,
     async (_, workdir: string, options: WorktreeRemoveOptions) => {
+      // Stop all resources using the worktree directory before removal
+      await stopWatchersInDirectory(options.path);
+      ptyManager.destroyByWorkdir(options.path);
+      agentSessionManager.stopByWorkdir(options.path);
+
+      // Wait for processes to fully terminate
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
       const service = getWorktreeService(workdir);
       await service.remove(options);
     }

@@ -114,4 +114,18 @@ export class AgentSessionManager {
     }
     this.sessions.clear();
   }
+
+  stopByWorkdir(workdir: string): void {
+    const normalizedWorkdir = workdir.replace(/\\/g, '/').toLowerCase();
+    for (const [id, session] of this.sessions.entries()) {
+      const normalizedCwd = session.workdir.replace(/\\/g, '/').toLowerCase();
+      if (
+        normalizedCwd === normalizedWorkdir ||
+        normalizedCwd.startsWith(`${normalizedWorkdir}/`)
+      ) {
+        session.process.kill();
+        this.sessions.delete(id);
+      }
+    }
+  }
 }

@@ -1,3 +1,4 @@
+import { exec } from 'node:child_process';
 import { homedir } from 'node:os';
 import { delimiter, join } from 'node:path';
 import type { ShellConfig, TerminalCreateOptions } from '@shared/types';
@@ -8,6 +9,7 @@ const isWindows = process.platform === 'win32';
 
 interface PtySession {
   pty: pty.IPty;
+  cwd: string;
   onData: (data: string) => void;
   onExit?: (exitCode: number, signal?: number) => void;
 }
@@ -92,7 +94,7 @@ export class PtyManager {
       onExit?.(exitCode, signal);
     });
 
-    this.sessions.set(id, { pty: ptyProcess, onData, onExit });
+    this.sessions.set(id, { pty: ptyProcess, cwd, onData, onExit });
 
     return id;
   }
@@ -114,7 +116,17 @@ export class PtyManager {
   destroy(id: string): void {
     const session = this.sessions.get(id);
     if (session) {
-      session.pty.kill();
+      const pid = session.pty.pid;
+
+      if (isWindows && pid) {
+        // On Windows, use taskkill to kill the entire process tree
+        exec(`taskkill /F /T /PID ${pid}`, () => {
+          // Ignore errors - process may already be dead
+        });
+      } else {
+        session.pty.kill();
+      }
+
       this.sessions.delete(id);
     }
   }
@@ -122,6 +134,19 @@ export class PtyManager {
   destroyAll(): void {
     for (const id of this.sessions.keys()) {
       this.destroy(id);
+    }
+  }
+
+  destroyByWorkdir(workdir: string): void {
+    const normalizedWorkdir = workdir.replace(/\\/g, '/').toLowerCase();
+    for (const [id, session] of this.sessions.entries()) {
+      const normalizedCwd = session.cwd.replace(/\\/g, '/').toLowerCase();
+      if (
+        normalizedCwd === normalizedWorkdir ||
+        normalizedCwd.startsWith(`${normalizedWorkdir}/`)
+      ) {
+        this.destroy(id);
+      }
     }
   }
 }

@@ -6,6 +6,21 @@ import { FileWatcher } from '../services/files/FileWatcher';
 
 const watchers = new Map<string, FileWatcher>();
 
+/**
+ * Stop all file watchers for paths under the given directory
+ */
+export async function stopWatchersInDirectory(dirPath: string): Promise<void> {
+  const normalizedDir = dirPath.replace(/\\/g, '/').toLowerCase();
+
+  for (const [path, watcher] of watchers.entries()) {
+    const normalizedPath = path.replace(/\\/g, '/').toLowerCase();
+    if (normalizedPath === normalizedDir || normalizedPath.startsWith(`${normalizedDir}/`)) {
+      await watcher.stop();
+      watchers.delete(path);
+    }
+  }
+}
+
 export function registerFileHandlers(): void {
   ipcMain.handle(IPC_CHANNELS.FILE_READ, async (_, filePath: string) => {
     const content = await readFile(filePath, 'utf-8');

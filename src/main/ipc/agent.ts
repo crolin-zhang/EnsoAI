@@ -4,7 +4,7 @@ import { AgentRegistry, BUILTIN_AGENTS } from '../services/agent/AgentRegistry';
 import { AgentSessionManager } from '../services/agent/AgentSession';
 
 const registry = new AgentRegistry(BUILTIN_AGENTS);
-const sessionManager = new AgentSessionManager();
+export const agentSessionManager = new AgentSessionManager();
 
 export function stopAllAgentSessions(): void {
   sessionManager.stopAll();
@@ -26,7 +26,7 @@ export function registerAgentHandlers(): void {
       throw new Error(`Agent not found: ${agentId}`);
     }
 
-    const session = await sessionManager.create(agent, workdir, (message) => {
+    const session = await agentSessionManager.create(agent, workdir, (message) => {
       if (!window.isDestroyed()) {
         window.webContents.send(IPC_CHANNELS.AGENT_MESSAGE, message);
       }
@@ -36,10 +36,10 @@ export function registerAgentHandlers(): void {
   });
 
   ipcMain.handle(IPC_CHANNELS.AGENT_STOP, async (_, sessionId: string) => {
-    await sessionManager.stop(sessionId);
+    await agentSessionManager.stop(sessionId);
   });
 
   ipcMain.handle(IPC_CHANNELS.AGENT_SEND, async (_, sessionId: string, content: string) => {
-    await sessionManager.send(sessionId, content);
+    await agentSessionManager.send(sessionId, content);
   });
 }

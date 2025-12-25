@@ -8,6 +8,14 @@ export function useTerminal() {
     useTerminalStore();
   const shellConfig = useSettingsStore((s) => s.shellConfig);
 
+  // Listen for terminal exit events from main process
+  useEffect(() => {
+    const unsubscribe = window.electronAPI.terminal.onExit(({ id }) => {
+      removeSession(id);
+    });
+    return unsubscribe;
+  }, [removeSession]);
+
   const createTerminal = useCallback(
     async (options?: TerminalCreateOptions) => {
       const createOptions: TerminalCreateOptions = {
