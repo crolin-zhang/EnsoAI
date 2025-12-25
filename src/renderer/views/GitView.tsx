@@ -22,14 +22,22 @@ import {
 import { useWorkspaceStore } from '@/stores/workspace';
 import { useWorktreeStore } from '@/stores/worktree';
 
-export function GitView() {
+interface GitViewProps {
+  isActive?: boolean;
+}
+
+export function GitView({ isActive = false }: GitViewProps) {
   const { currentWorkspace } = useWorkspaceStore();
   const { currentWorktree } = useWorktreeStore();
 
   // Use worktree path if available, otherwise workspace path
   const workdir = currentWorktree?.path || currentWorkspace?.path || null;
 
-  const { data: status, isLoading: statusLoading, refetch: refetchStatus } = useGitStatus(workdir);
+  const {
+    data: status,
+    isLoading: statusLoading,
+    refetch: refetchStatus,
+  } = useGitStatus(workdir, isActive);
   const {
     data: branches = [],
     isLoading: branchesLoading,
